@@ -8,6 +8,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -23,7 +24,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -31,7 +37,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final int REQUEST_CODE = 1;
     private Marker homeMarker;
     private Marker destMarker;
-
+    private final int POLYGON_POINTS= 5;
+    List<Marker> markers = new ArrayList<>();
     Polygon shape;
     Polyline line;
 
@@ -109,22 +116,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
-private void setMarker(Location location){
+private void setMarker(Location location)
+    {
        // mMap.clear();
         LatLng userLatLng = new LatLng(location.getLatitude(),location.getLongitude());
         MarkerOptions options = new MarkerOptions().position(userLatLng)
                 .title("Your Location")
                 .snippet("You Are Here")
                 .draggable(true);
-        if(destMarker == null) {
-            destMarker = mMap.addMarker(options);
-        }else {
-            clearMap();
-            destMarker = mMap.addMarker(options);
-        }
+           /* if(destMarker == null) {
+                destMarker = mMap.addMarker(options);
 
+            }else {
+                clearMap();
+                destMarker = mMap.addMarker(options);
 
-}
+            }
+
+            drawLine();
+
+            */
+           if (markers.size() == POLYGON_POINTS)
+           {
+               clearMap();
+           }
+           markers.add(mMap.addMarker(options));
+
+           if(markers.size() == POLYGON_POINTS){
+               drawShape();
+           }
+    }
 
 
     @SuppressLint("MissingPermission")
@@ -171,11 +192,43 @@ private void setMarker(Location location){
     }
 
     private void clearMap(){
-    if (destMarker != null)
-    {
-        destMarker.remove();
-        destMarker=null;
+//    if (destMarker != null)
+//    {
+//        destMarker.remove();
+//        destMarker=null;
+//    }
+//    line.remove();
+    for (Marker marker : markers)
+        marker.remove();
+
+
+    markers.clear();
+    shape.remove();
+    shape = null;
+
     }
+    private void drawLine(){
+        PolylineOptions options = new PolylineOptions()
+                .add(homeMarker.getPosition())
+                .add(destMarker.getPosition())
+                .color(Color.BLACK)
+                .width(3);
+
+        line = mMap.addPolyline(options);
+
     }
 
+  private void drawShape(){
+      PolygonOptions options= new PolygonOptions()
+              .fillColor(0x330000FF)
+              .strokeWidth(5)
+              .strokeColor(Color.RED);
+
+      for(int i=0;i<POLYGON_POINTS;i++) {
+          options.add(markers.get(i).getPosition());
+      }
+          shape = mMap.addPolygon(options);
+
+
+  }
 }
